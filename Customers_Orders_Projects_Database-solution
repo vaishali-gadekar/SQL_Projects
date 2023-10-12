@@ -1,0 +1,240 @@
+CREATE TABLE Customers (
+  CustomerID INT PRIMARY KEY,
+  Name VARCHAR(50),
+  Email VARCHAR(100))
+
+INSERT INTO Customers (CustomerID, Name, Email)
+VALUES
+  (1, 'John Doe', 'johndoe@example.com'),
+  (2, 'Jane Smith', 'janesmith@example.com'),
+  (3, 'Robert Johnson', 'robertjohnson@example.com'),
+  (4, 'Emily Brown', 'emilybrown@example.com'),
+  (5, 'Michael Davis', 'michaeldavis@example.com'),
+  (6, 'Sarah Wilson', 'sarahwilson@example.com'),
+  (7, 'David Thompson', 'davidthompson@example.com'),
+  (8, 'Jessica Lee', 'jessicalee@example.com'),
+  (9, 'William Turner', 'williamturner@example.com'),
+  (10, 'Olivia Martinez', 'oliviamartinez@example.com');
+
+CREATE TABLE Orders (
+  OrderID INT PRIMARY KEY,
+  CustomerID INT,
+  ProductName VARCHAR(50),
+  OrderDate DATE,
+  Quantity INT)
+
+INSERT INTO Orders (OrderID, CustomerID, ProductName, OrderDate, Quantity)
+VALUES
+  (1, 1, 'Product A', '2023-07-01', 5),
+  (2, 2, 'Product B', '2023-07-02', 3),
+  (3, 3, 'Product C', '2023-07-03', 2),
+  (4, 4, 'Product A', '2023-07-04', 1),
+  (5, 5, 'Product B', '2023-07-05', 4),
+  (6, 6, 'Product C', '2023-07-06', 2),
+  (7, 7, 'Product A', '2023-07-07', 3),
+  (8, 8, 'Product B', '2023-07-08', 2),
+  (9, 9, 'Product C', '2023-07-09', 5),
+  (10, 10, 'Product A', '2023-07-10', 1);
+
+CREATE TABLE Products (
+  ProductID INT PRIMARY KEY,
+  ProductName VARCHAR(50),
+  Price DECIMAL(10, 2))
+
+INSERT INTO Products (ProductID, ProductName, Price)
+VALUES
+  (1, 'Product A', 10.99),
+  (2, 'Product B', 8.99),
+  (3, 'Product C', 5.99),
+  (4, 'Product D', 12.99),
+  (5, 'Product E', 7.99),
+  (6, 'Product F', 6.99),
+  (7, 'Product G', 9.99),
+  (8, 'Product H', 11.99),
+  (9, 'Product I', 14.99),
+  (10, 'Product J', 4.99);
+
+
+--------------------------------------TASK-1-----------------------------------
+-- 1.Write a query to retrieve all records from the Customers table.
+SELECT * FROM Customers
+
+--2.Write a query to retrieve the names and email addresses of customers whose names start with 'J'.
+SELECT name, email FROM Customers
+WHERE name LIKE 'J%'
+
+--3.Write a query to retrieve the order details (OrderID, ProductName, Quantity) for all orders.
+SELECT orderid, productname, quantity FROM Orders
+
+--4.Write a query to calculate the total quantity of products ordered.
+SELECT SUM(quantity) AS total_ordered_products FROM Orders
+
+--5.Write a query to retrieve the names of customers who have placed an order.
+SELECT * FROM Orders
+SELECT * FROM Products
+
+SELECT t1.customerid, t1.name FROM Customers t1
+RIGHT JOIN Orders t2 ON
+t1.customerid = t2.customerid
+
+--6.Write a query to retrieve the products with a price greater than $10.00.
+SELECT productname, price FROM Products
+WHERE price > 10
+
+--7.Write a query to retrieve the customer name and order date for all orders placed on or after '2023-07-05'.
+SELECT t1.name, t2.orderdate FROM Customers t1
+RIGHT JOIN Orders t2 ON
+t1.customerid = t2.customerid
+WHERE orderdate >= '2023-07-05'
+
+--8.Write a query to calculate the average price of all products.
+SELECT AVG(price) AS avg_price FROM Products
+
+--9.Write a query to retrieve the customer names along with the total quantity of products they have ordered.
+SELECT t1.name, t2.quantity AS total_quantity_of_products FROM Customers t1
+RIGHT JOIN Orders t2 ON
+t1.customerid = t2.customerid
+
+--10.Write a query to retrieve the products that have not been ordered.
+SELECT DISTINCT t1.productname FROM Products t1
+LEFT JOIN Orders t2 ON
+t1.productname = t2.productname
+WHERE t1.productname NOT IN (SELECT DISTINCT productname FROM Orders)
+
+--------------------------------------TASK-2-----------------------------------
+--1.Write a query to retrieve the top 5 customers who have placed the highest total quantity of orders.
+SELECT t1.customerid, t1.name, t2.quantity FROM Customers t1
+INNER JOIN Orders t2 ON t1.customerid = t2.customerid
+ORDER BY quantity DESC
+LIMIT 5
+
+--2.Write a query to calculate the average price of products for each product category.
+SELECT productname, ROUND(AVG(price),2) FROM Products
+GROUP BY productname
+
+--3.Write a query to retrieve the customers who have not placed any orders.
+SELECT customerid FROM Orders 
+WHERE customerid NOT IN 
+(SELECT customerid FROM Customers)
+
+--4.Write a query to retrieve the order details (OrderID, ProductName, Quantity) for orders placed by customers whose names start with 'M'.
+SELECT t2.name, t1.orderid, t1.productname, t1.quantity FROM Orders t1 
+JOIN Customers t2 ON t1.customerid = t2.customerid
+WHERE name LIKE 'M%'
+
+--5.Write a query to calculate the total revenue generated from all orders.
+SELECT SUM(total_amt) AS total_revenue FROM
+(SELECT t1.quantity, t2.price, (quantity*price) AS total_amt FROM Orders t1
+JOIN Products t2 ON 
+t1.productname = t2.productname) AS p1
+
+--6.Write a query to retrieve the customer names along with the total revenue generated from their orders.
+SELECT p2.name, p1.total_amt AS revenue_per_customer FROM 
+(SELECT t1.customerid, t1.quantity, t2.price, (quantity*price) AS total_amt FROM Orders t1
+JOIN Products t2 ON 
+t1.productname = t2.productname) AS p1
+JOIN Customers p2 ON
+p1.customerid = p2.customerid
+
+--7.Write a query to retrieve the customers who have placed at least one order for each product category.
+SELECT t1.customerid, t1.productname FROM Orders t1
+JOIN Products t2 ON t1.productname = t2.productname
+GROUP BY t1.customerid, t1.productname
+HAVING COUNT(DISTINCT t1.productname) = (SELECT COUNT(*) FROM Products)
+
+--8.Write a query to retrieve the top 3 products with the highest average quantity ordered.
+SELECT productname, ROUND(AVG(quantity),2) AS avg_quantity 
+FROM Orders
+GROUP BY productname
+ORDER BY ROUND(AVG(quantity),2) DESC
+LIMIT 3
+
+--9.Write a query to calculate the percentage of orders that have a quantity greater than the average quantity.
+SELECT p1.orderid, (p1.quantity/p1.total)*100 AS order_percentage FROM 
+(SELECT orderid, quantity, (SELECT sum(quantity) FROM Orders) AS total
+FROM Orders) AS p1
+HAVING quantity > AVG(quantity)
+GROUP BY p1.orderid
+
+--------------------------------------TASK-2-----------------------------------
+--1.Write a query to retrieve the customers who have placed orders for all products.
+SELECT t1.customerid, t1.productname FROM Orders t1
+JOIN Products t2 ON t1.productname = t2.productname
+GROUP BY t1.customerid, t1.productname
+HAVING COUNT(DISTINCT t1.productname) = (SELECT COUNT(*) FROM Products)
+
+--2.Write a query to retrieve the products that have been ordered by all customers.
+SELECT t1.customerid, t1.productname FROM Orders t1
+JOIN Customers t2 ON t1.customerid = t2.customerid
+GROUP BY t1.customerid, t1.productname
+HAVING COUNT(DISTINCT t1.customerid) = (SELECT COUNT(*) FROM Customers)
+
+--3.Write a query to calculate the total revenue generated from orders placed in each month.
+SELECT month, SUM(total_amt) AS revenue FROM
+(SELECT EXTRACT(MONTH FROM t1.orderdate) AS month, t1.quantity, t2.price, 
+(quantity*price) AS total_amt FROM Orders t1
+JOIN Products t2 ON 
+t1.productname = t2.productname) AS P1
+GROUP BY month
+
+--4.Write a query to retrieve the products that have been ordered by more than 50% of the customers.
+SELECT t1.customerid, t1.productname FROM Orders t1
+JOIN Customers t2 ON t1.customerid = t2.customerid
+GROUP BY t1.customerid, t1.productname
+HAVING COUNT(DISTINCT t1.customerid) = 0.5*(SELECT COUNT(*) FROM Customers)
+
+--5.Write a query to retrieve the top 5 customers who have spent the highest amount of money on orders.
+SELECT p1.customerid, p2.name, p1.total_amt FROM
+(SELECT t1.customerid, t1.quantity, t2.price, 
+(quantity*price) AS total_amt FROM Orders t1
+JOIN Products t2 ON 
+t1.productname = t2.productname) AS p1
+JOIN Customers p2 ON 
+p1.customerid = p2.customerid
+ORDER BY p1.total_amt DESC
+LIMIT 5
+
+--6.Write a query to calculate the running total of order quantities for each customer.
+SELECT t1.name, t2.orderdate, t2.quantity,
+SUM(t2.quantity) OVER(PARTITION BY t1.customerid ORDER BY t2.orderdate) AS RunningTotal
+FROM Customers t1
+JOIN Orders t2 ON t1.CustomerID = t2.CustomerID
+ORDER BY t1.CustomerID, t2.OrderDate
+
+--7.Write a query to retrieve the top 3 most recent orders for each customer.
+SELECT * FROM Orders
+SELECT * FROM Products
+SELECT * FROM Customers
+
+SELECT customerid, orderdate, ROW_NUMBER() OVER(PARTITION BY customerid ORDER BY orderdate ) FROM Orders
+ORDER BY orderdate DESC
+
+--8.Write a query to calculate the total revenue generated by each customer in the last 30 days.
+SELECT p2.name, p1.total_amt AS revenue_per_customer FROM 
+(SELECT t1.customerid,t1.orderdate, t1.quantity, t2.price, (quantity*price) AS total_amt FROM Orders t1
+JOIN Products t2 ON 
+t1.productname = t2.productname) AS p1
+JOIN Customers p2 ON
+p1.customerid = p2.customerid
+WHERE orderdate BETWEEN '2023-07-01' AND '2023-07-30'
+
+--9.Write a query to retrieve the customers who have placed orders for at least two different product categories.
+SELECT t1.customerid, t1.productname, COUNT(t1.productname) FROM Orders t1
+JOIN Products t2 ON t1.productname = t2.productname
+GROUP BY t1.customerid, t1.productname
+HAVING COUNT(t1.productname) >= 2
+
+--10.Write a query to calculate the average revenue per order for each customer.
+SELECT p2.name, ROUND(AVG(p1.total_amt),2) AS avg_revenue FROM 
+(SELECT t1.customerid, t1.quantity, t2.price, (quantity*price) AS total_amt FROM Orders t1
+JOIN Products t2 ON 
+t1.productname = t2.productname) AS p1
+JOIN Customers p2 ON
+p1.customerid = p2.customerid
+GROUP BY p2.name
+
+
+
+
+
+
